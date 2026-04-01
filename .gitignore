@@ -1,0 +1,123 @@
+# Built application files
+*.class
+*.jar
+*.war
+*.ear
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Gradle
+.gradle/
+build/
+out/
+.gradle/daemon/
+.gradle/caches/
+.gradle/native/
+.gradle/workers/
+.gradle/build-cache/
+.gradle/configuration-cache/
+.gradle/checksums/
+.gradle/notifications/
+.gradle/plugins/
+.gradle/tooling/
+.gradle/vcs-1/
+.gradle/wrapper/dists/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.nb-gradle/
+.nbattrs
+*.swp
+*~
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# User local config
+local.properties
+*.local
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs/
+*.log
+log/
+*.log.*
+
+# Coverage reports
+coverage/
+jacoco/
+*.gcda
+*.gcno
+*.lcov
+
+# Maven (optional, kept for compatibility)
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+build-number.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+# Distribution packages
+dist/
+distributions/
+*.tar
+*.tar.gz
+*.zip
+
+# System specific
+*.com
+*.dmg
+*.pkg
+*.app
+
+# Documentation
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Miscellaneous
+*.cache
+*.lock
+*.tsbuildinfo
+*.tsbuildinfo.*
+*.tsbuildinfo.json
+*.tsbuildinfo.tsbuildinfo

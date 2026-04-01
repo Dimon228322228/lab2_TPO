@@ -1,0 +1,20 @@
+plugins {
+  id 'applications-conventions'
+}
+
+dependencies {
+  implementation 'org.apache.commons:commons-text:1.10.0'
+  compileOnly 'org.projectlombok:lombok:1.18.36'
+  annotationProcessor 'org.projectlombok:lombok:1.18.36'
+}
+
+application {
+  mainClass = 'lab2.App'
+}
+
+task printTestClasspath {
+  doLast {
+    println "Test runtime classpath:"
+    sourceSets.test.runtimeClasspath.each { println it }
+  }
+}
