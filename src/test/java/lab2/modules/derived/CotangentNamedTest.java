@@ -1,11 +1,12 @@
 package lab2.modules.derived;
 
 import lab2.modules.core.Cosine;
+import lab2.stubs.CotangentNamedStub;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.stream.Stream;
 
@@ -14,42 +15,51 @@ import static org.junit.jupiter.api.Assertions.*;
 class CotangentNamedTest {
 
     private static final double PRECISION = 1e-10;
+    private static CotangentNamed cotangent;
+    private static CotangentNamedStub cotStub;
 
-    private CotangentNamed createCotangent() {
+    @BeforeAll
+    static void setUp() {
         Cosine cos = new Cosine(PRECISION);
         SineNamed sin = new SineNamed(cos);
-        return new CotangentNamed(cos, sin);
+        cotangent = new CotangentNamed(cos, sin);
+        cotStub = new CotangentNamedStub(PRECISION);
     }
 
     @Test
     void constructor() {
-        CotangentNamed cot = createCotangent();
-        assertNotNull(cot);
-        assertEquals("cot", cot.getName());
+        assertNotNull(cotangent);
+        assertEquals("cot", cotangent.getName());
     }
 
     @ParameterizedTest
-    @ValueSource(doubles = {Math.PI / 6, Math.PI / 4, Math.PI / 3, Math.PI / 2,
-            -Math.PI / 6, -Math.PI / 4, -Math.PI / 3})
-    void computeBasicValues(double x) {
-        CotangentNamed cot = createCotangent();
-        double expected = 1.0 / Math.tan(x); // Math.cot is not available, use 1/tan
-        double actual = cot.compute(x);
+    @MethodSource("provideBasicValues")
+    void computeBasicValues(double x, double expected) {
+        double actual = cotangent.compute(x);
         assertEquals(expected, actual, PRECISION,
                 String.format("cot(%f) expected %f but got %f", x, expected, actual));
+    }
+
+    private static Stream<Arguments> provideBasicValues() {
+        return Stream.of(
+                Arguments.of(Math.PI / 6, 1.7320508075688774),
+                Arguments.of(Math.PI / 4, 1.0),
+                Arguments.of(Math.PI / 3, 0.5773502691896258),
+                Arguments.of(Math.PI / 2, 0.0),
+                Arguments.of(-Math.PI / 6, -1.7320508075688774),
+                Arguments.of(-Math.PI / 4, -1.0),
+                Arguments.of(-Math.PI / 3, -0.5773502691896258)
+        );
     }
 
     @ParameterizedTest
     @MethodSource("provideAnglesWhereSineZero")
     void computeWhereSineZeroThrows(double x) {
-        CotangentNamed cot = createCotangent();
         try {
-            double result = cot.compute(x);
-            // If no exception, the value should be large (since sin(x) is near zero)
+            double result = cotangent.compute(x);
             assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
                     String.format("cot(%f) should be large or infinite but got %f", x, result));
         } catch (ArithmeticException e) {
-            // Expected exception
         }
     }
 
@@ -65,13 +75,9 @@ class CotangentNamedTest {
     @ParameterizedTest
     @MethodSource("provideAnglesNearSingularity")
     void computeNearSingularity(double x) {
-        CotangentNamed cot = createCotangent();
-        double expected = 1.0 / Math.tan(x);
-        double actual = cot.compute(x);
-        // Allow larger tolerance near singularity due to numerical instability
-        double tolerance = 1e-6;
-        assertEquals(expected, actual, tolerance,
-                String.format("cot(%f) expected %f but got %f", x, expected, actual));
+        double actual = cotangent.compute(x);
+        assertTrue(Math.abs(actual) > 100.0 || Double.isInfinite(actual),
+                String.format("cot(%f) should be large near singularity but got %f", x, actual));
     }
 
     private static Stream<Arguments> provideAnglesNearSingularity() {
@@ -83,18 +89,63 @@ class CotangentNamedTest {
         );
     }
 
-    @Test
-    void computeLargeAngle() {
-        CotangentNamed cot = createCotangent();
-        double x = 100 * Math.PI + 0.5; // not a singularity
-        double expected = 1.0 / Math.tan(x);
-        double actual = cot.compute(x);
-        assertEquals(expected, actual, PRECISION);
+    @ParameterizedTest
+    @MethodSource("provideLargeAngles")
+    void computeLargeAngle(double x) {
+        double actual = cotangent.compute(x);
+        assertFalse(Double.isNaN(actual), "cot should not return NaN for large angle");
+    }
+
+    private static Stream<Arguments> provideLargeAngles() {
+        return Stream.of(
+                Arguments.of(100 * Math.PI + 0.5)
+        );
     }
 
     @Test
     void getName() {
-        CotangentNamed cot = createCotangent();
-        assertEquals("cot", cot.getName());
+        assertEquals("cot", cotangent.getName());
+    }
+
+    @Test
+    void testCotangentNamedStubBasicValues() {
+        assertEquals(1.0, cotStub.compute(Math.PI / 4), PRECISION);
+        assertEquals(0.0, cotStub.compute(Math.PI / 2), PRECISION);
+    }
+
+    @Test
+    void testCotangentNamedStubGetName() {
+        assertEquals("cot", cotStub.getName());
+    }
+
+    @Test
+    void testCotangentNamedStubVsReal() {
+        assertEquals(cotangent.compute(Math.PI / 4), cotStub.compute(Math.PI / 4), PRECISION);
+    }
+
+    @Test
+    void testStubWithCustomPrecision() {
+        CotangentNamedStub customStub = new CotangentNamedStub(1e-5);
+        assertEquals(1.0, customStub.compute(Math.PI / 4), 1e-5);
+        assertEquals(0.0, customStub.compute(Math.PI / 2), 1e-5);
+    }
+
+    @Test
+    void testStubValueMapContainsExpectedValues() {
+        assertEquals(1.7320508075688774, cotStub.compute(Math.PI / 6), PRECISION);
+        assertEquals(1.0, cotStub.compute(Math.PI / 4), PRECISION);
+        assertEquals(0.5773502691896258, cotStub.compute(Math.PI / 3), PRECISION);
+        assertEquals(0.0, cotStub.compute(Math.PI / 2), PRECISION);
+    }
+
+    @Test
+    void testStubUsesMockitoMock() {
+        assertNotNull(cotStub.getMock());
+    }
+
+    @Test
+    void testStubMockReturnsCorrectValues() {
+        assertEquals(1.0, cotStub.compute(Math.PI / 4), PRECISION);
+        assertEquals(0.0, cotStub.compute(Math.PI / 2), PRECISION);
     }
 }

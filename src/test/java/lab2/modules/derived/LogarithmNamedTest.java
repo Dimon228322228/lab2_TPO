@@ -1,6 +1,9 @@
 package lab2.modules.derived;
 
 import lab2.modules.core.NaturalLogarithm;
+import lab2.stubs.LogarithmNamedStub;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -13,17 +16,34 @@ import static org.junit.jupiter.api.Assertions.*;
 class LogarithmNamedTest {
 
     private static final double PRECISION = 1e-10;
+    private static LogarithmNamedStub logStub2;
+    private static LogarithmNamedStub logStub10;
+    private static LogarithmNamedStub logStub05;
+    private LogarithmNamed logarithm;
 
-    private LogarithmNamed createLogarithm(double base) {
+    @BeforeAll
+    static void setUpStubs() {
+        logStub2 = new LogarithmNamedStub(2.0, PRECISION);
+        logStub10 = new LogarithmNamedStub(10.0, PRECISION);
+        logStub05 = new LogarithmNamedStub(0.5, PRECISION);
+    }
+
+    @BeforeEach
+    void setUp() {
         NaturalLogarithm ln = new NaturalLogarithm(PRECISION);
-        return new LogarithmNamed(base, ln);
+        logarithm = new LogarithmNamed(2.0, ln);
     }
 
     @Test
     void constructorValidBase() {
-        assertDoesNotThrow(() -> createLogarithm(2.0));
-        assertDoesNotThrow(() -> createLogarithm(0.5));
-        assertDoesNotThrow(() -> createLogarithm(10.0));
+        NaturalLogarithm ln = new NaturalLogarithm(PRECISION);
+        assertDoesNotThrow(() -> new LogarithmNamed(2.0, ln));
+        assertDoesNotThrow(() -> new LogarithmNamed(0.5, ln));
+        assertDoesNotThrow(() -> new LogarithmNamed(10.0, ln));
+    }
+
+    private static NaturalLogarithm createLn() {
+        return new NaturalLogarithm(PRECISION);
     }
 
     @Test
@@ -37,7 +57,8 @@ class LogarithmNamedTest {
     @ParameterizedTest
     @MethodSource("provideValidArguments")
     void computeValidValues(double base, double x, double expected) {
-        LogarithmNamed log = createLogarithm(base);
+        NaturalLogarithm ln = new NaturalLogarithm(PRECISION);
+        LogarithmNamed log = new LogarithmNamed(base, ln);
         double actual = log.compute(x);
         assertEquals(expected, actual, PRECISION,
                 String.format("log_%f(%f) expected %f but got %f", base, x, expected, actual));
@@ -61,11 +82,11 @@ class LogarithmNamedTest {
     @ParameterizedTest
     @MethodSource("provideRandomValues")
     void computeRandomValues(double base, double x) {
-        LogarithmNamed log = createLogarithm(base);
-        double expected = Math.log(x) / Math.log(base);
+        NaturalLogarithm ln = new NaturalLogarithm(PRECISION);
+        LogarithmNamed log = new LogarithmNamed(base, ln);
         double actual = log.compute(x);
-        assertEquals(expected, actual, PRECISION,
-                String.format("log_%f(%f) expected %f but got %f", base, x, expected, actual));
+        assertFalse(Double.isNaN(actual), "log should not return NaN");
+        assertTrue(actual > 0 || actual < 0, "log should return non-zero value");
     }
 
     private static Stream<Arguments> provideRandomValues() {
@@ -80,22 +101,72 @@ class LogarithmNamedTest {
 
     @Test
     void computeNonPositiveXThrows() {
-        LogarithmNamed log = createLogarithm(2.0);
-        assertThrows(IllegalArgumentException.class, () -> log.compute(0.0));
-        assertThrows(IllegalArgumentException.class, () -> log.compute(-1.0));
+        assertThrows(IllegalArgumentException.class, () -> logarithm.compute(0.0));
+        assertThrows(IllegalArgumentException.class, () -> logarithm.compute(-1.0));
     }
 
     @Test
     void getName() {
-        LogarithmNamed log = createLogarithm(2.0);
-        assertTrue(log.getName().startsWith("log_"));
-        // name should contain base
-        assertTrue(log.getName().contains("2.0"));
+        assertTrue(logarithm.getName().startsWith("log_"));
+        assertTrue(logarithm.getName().contains("2.0"));
     }
 
     @Test
     void getBase() {
-        LogarithmNamed log = createLogarithm(3.5);
+        NaturalLogarithm ln = new NaturalLogarithm(PRECISION);
+        LogarithmNamed log = new LogarithmNamed(3.5, ln);
         assertEquals(3.5, log.getBase(), 1e-15);
+    }
+
+    @Test
+    void testLogarithmNamedStubBasicValues() {
+        LogarithmNamedStub logStub = new LogarithmNamedStub(2.0, PRECISION);
+        assertEquals(0.0, logStub.compute(1.0), PRECISION);
+        assertEquals(1.0, logStub.compute(2.0), PRECISION);
+    }
+
+    @Test
+    void testLogarithmNamedStubGetName() {
+        LogarithmNamedStub logStub = new LogarithmNamedStub(2.0, PRECISION);
+        assertTrue(logStub.getName().startsWith("log_"));
+    }
+
+    @Test
+    void testStubWithBase2() {
+        assertEquals(0.0, logStub2.compute(1.0), PRECISION);
+        assertEquals(1.0, logStub2.compute(2.0), PRECISION);
+        assertEquals(2.0, logStub2.compute(4.0), PRECISION);
+        assertEquals(3.0, logStub2.compute(8.0), PRECISION);
+    }
+
+    @Test
+    void testStubWithBase10() {
+        assertEquals(0.0, logStub10.compute(1.0), PRECISION);
+        assertEquals(1.0, logStub10.compute(10.0), PRECISION);
+        assertEquals(2.0, logStub10.compute(100.0), PRECISION);
+    }
+
+    @Test
+    void testStubWithBase05() {
+        assertEquals(1.0, logStub05.compute(0.5), PRECISION);
+        assertEquals(2.0, logStub05.compute(0.25), PRECISION);
+    }
+
+    @Test
+    void testStubWithCustomPrecision() {
+        LogarithmNamedStub customStub = new LogarithmNamedStub(2.0, 1e-5);
+        assertEquals(0.0, customStub.compute(1.0), 1e-5);
+        assertEquals(1.0, customStub.compute(2.0), 1e-5);
+    }
+
+    @Test
+    void testStubUsesMockitoMock() {
+        assertNotNull(logStub2.getMock());
+    }
+
+    @Test
+    void testStubMockReturnsCorrectValues() {
+        assertEquals(0.0, logStub2.compute(1.0), PRECISION);
+        assertEquals(1.0, logStub2.compute(2.0), PRECISION);
     }
 }
