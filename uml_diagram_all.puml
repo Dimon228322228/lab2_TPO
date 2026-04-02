@@ -1,0 +1,177 @@
+@startuml
+' UML диаграмма классов для проекта lab2 (полная версия с App)
+
+' Интерфейсы
+interface Computable {
+  + ZERO_THRESHOLD: double
+  + MAX_PRECISION: double
+  + compute(x: double): double
+}
+
+interface NamedOutputFunction {
+  + getName(): String
+}
+
+interface Writer {
+  + write(data: List<double[]>, filename: String): void
+}
+
+' Классы ядра (core)
+class Cosine implements NamedOutputFunction {
+  - precision: double
+  + Cosine(precision: double)
+  + compute(x: double): double
+  + getName(): String
+  - reduceAngle(x: double): double
+}
+
+class NaturalLogarithm implements NamedOutputFunction {
+  - precision: double
+  + NaturalLogarithm(precision: double)
+  + compute(x: double): double
+  + getName(): String
+  - calculateLog2(): double
+}
+
+' Производные классы (derived)
+class SineNamed implements NamedOutputFunction {
+  - cos: Cosine
+  - name: String
+  + SineNamed(cos: Cosine)
+  + compute(x: double): double
+  + getName(): String
+}
+
+class TangentNamed implements NamedOutputFunction {
+  - cos: Cosine
+  - sin: SineNamed
+  - name: String
+  + TangentNamed(cos: Cosine, sin: SineNamed)
+  + compute(x: double): double
+  + getName(): String
+}
+
+class CotangentNamed implements NamedOutputFunction {
+  - cos: Cosine
+  - sin: SineNamed
+  - name: String
+  + CotangentNamed(cos: Cosine, sin: SineNamed)
+  + compute(x: double): double
+  + getName(): String
+}
+
+class SecantNamed implements NamedOutputFunction {
+  - cos: Cosine
+  - name: String
+  + SecantNamed(cos: Cosine)
+  + compute(x: double): double
+  + getName(): String
+}
+
+class CosecantNamed implements NamedOutputFunction {
+  - sin: SineNamed
+  - name: String
+  + CosecantNamed(sin: SineNamed)
+  + compute(x: double): double
+  + getName(): String
+}
+
+class LogarithmNamed implements NamedOutputFunction {
+  - calculator: NaturalLogarithm
+  - base: double
+  - name: String
+  + LogarithmNamed(base: double, ln: NaturalLogarithm)
+  + compute(x: double): double
+  + getName(): String
+  + getBase(): double
+}
+
+class ComplexNamed implements NamedOutputFunction {
+  - name: String
+  - cos: Cosine
+  - sin: SineNamed
+  - csc: CosecantNamed
+  - sec: SecantNamed
+  - ctg: CotangentNamed
+  - ln: NaturalLogarithm
+  - log3: LogarithmNamed
+  - log10: LogarithmNamed
+  + ComplexNamed(precision: double)
+  + compute(x: double): double
+  + getName(): String
+}
+
+' Классы вывода (output)
+class Range {
+  - start: double
+  - end: double
+  - step: double
+  + Range(start: double, end: double, step: double)
+  + pointCount(): int
+  + withStep(newStep: double): Range
+  + toString(): String
+}
+
+class FunctionManager {
+  - module: NamedOutputFunction
+  - range: Range
+  - writer: Writer
+  + FunctionManager(module: NamedOutputFunction)
+  + setRange(range: Range)
+  + writeData(): void
+  - generateData(): List<double[]>
+}
+
+class CSVWriter implements Writer {
+  - DEFAULT_SEPARATOR: String
+  + write(data: List<double[]>, filename: String): void
+}
+
+' Главный класс
+class App {
+  - PI: double
+  - DEFAULT_PRECISION: double
+  + main(args: String[]): void
+  - generateCSV(manager: FunctionManager, range: Range, description: String): void
+}
+
+' Наследование
+NamedOutputFunction --|> Computable
+CSVWriter ..|> Writer
+
+' Композиции/агрегации (зависимости между модулями)
+SineNamed --> Cosine
+TangentNamed --> Cosine
+TangentNamed --> SineNamed
+CotangentNamed --> Cosine
+CotangentNamed --> SineNamed
+SecantNamed --> Cosine
+CosecantNamed --> SineNamed
+LogarithmNamed --> NaturalLogarithm
+ComplexNamed --> Cosine
+ComplexNamed --> SineNamed
+ComplexNamed --> CosecantNamed
+ComplexNamed --> SecantNamed
+ComplexNamed --> CotangentNamed
+ComplexNamed --> NaturalLogarithm
+ComplexNamed --> LogarithmNamed
+
+' Зависимости классов вывода
+FunctionManager --> NamedOutputFunction
+FunctionManager --> Range
+FunctionManager --> Writer
+
+' Зависимости App
+App --> FunctionManager
+App --> Range
+App --> Cosine
+App --> NaturalLogarithm
+App --> SineNamed
+App --> TangentNamed
+App --> CotangentNamed
+App --> SecantNamed
+App --> CosecantNamed
+App --> LogarithmNamed
+App --> ComplexNamed
+
+@enduml
