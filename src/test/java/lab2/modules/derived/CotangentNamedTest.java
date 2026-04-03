@@ -55,12 +55,8 @@ class CotangentNamedTest {
     @ParameterizedTest
     @MethodSource("provideAnglesWhereSineZero")
     void computeWhereSineZeroThrows(double x) {
-        try {
-            double result = cotangent.compute(x);
-            assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
-                    String.format("cot(%f) should be large or infinite but got %f", x, result));
-        } catch (ArithmeticException e) {
-        }
+        assertThrows(ArithmeticException.class, () -> cotangent.compute(x), 
+                String.format("cot(%f) shouldn't be exist", x));
     }
 
     private static Stream<Arguments> provideAnglesWhereSineZero() {

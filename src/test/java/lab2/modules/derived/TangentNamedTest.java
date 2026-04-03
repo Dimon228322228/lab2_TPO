@@ -55,12 +55,8 @@ class TangentNamedTest {
     @ParameterizedTest
     @MethodSource("provideAnglesWhereCosineZero")
     void computeWhereCosineZeroThrows(double x) {
-        try {
-            double result = tangent.compute(x);
-            assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
-                    String.format("tan(%f) should be large or infinite but got %f", x, result));
-        } catch (ArithmeticException e) {
-        }
+        assertThrows(ArithmeticException.class, () -> tangent.compute(x),
+                    String.format("tan(%f) shouldn't be exist", x));
     }
 
     private static Stream<Arguments> provideAnglesWhereCosineZero() {

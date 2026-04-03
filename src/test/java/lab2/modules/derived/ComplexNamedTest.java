@@ -44,25 +44,11 @@ class ComplexNamedTest {
         assertFalse(Double.isNaN(actual), "complex should not return NaN for log part");
     }
 
-    @Test
-    void computeAtZero() {
-        try {
-            double result = complex.compute(0.0);
-            assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
-                    "complex(0) should be large or infinite but got " + result);
-        } catch (ArithmeticException e) {
-        }
-    }
-
     @ParameterizedTest
     @MethodSource("provideSingularPoints")
     void computeAtSingularPointsThrows(double x) {
-        try {
-            double result = complex.compute(x);
-            assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
-                    String.format("complex(%f) should be large or infinite but got %f", x, result));
-        } catch (ArithmeticException e) {
-        }
+        assertThrows(ArithmeticException.class, () -> complex.compute(x),
+                String.format("ln(%f) should throw ArithmeticException", x));
     }
 
     private static Stream<Arguments> provideSingularPoints() {

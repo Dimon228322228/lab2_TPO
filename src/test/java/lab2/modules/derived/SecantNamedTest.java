@@ -55,12 +55,8 @@ class SecantNamedTest {
     @ParameterizedTest
     @MethodSource("provideAnglesWhereCosineZero")
     void computeWhereCosineZeroThrows(double x) {
-        try {
-            double result = secant.compute(x);
-            assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
-                    String.format("sec(%f) should be large or infinite but got %f", x, result));
-        } catch (ArithmeticException e) {
-        }
+        assertThrows( ArithmeticException.class, () -> secant.compute(x),
+                String.format("sec(%f) shouldn't be exist", x));
     }
 
     private static Stream<Arguments> provideAnglesWhereCosineZero() {

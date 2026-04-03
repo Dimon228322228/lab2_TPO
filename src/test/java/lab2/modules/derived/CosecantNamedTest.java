@@ -55,13 +55,9 @@ class CosecantNamedTest {
     @ParameterizedTest
     @MethodSource("provideAnglesWhereSineZero")
     void computeWhereSineZeroThrows(double x) {
-        try {
-            double result = cosecant.compute(x);
-            assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
-                    String.format("csc(%f) should be large or infinite but got %f", x, result));
-        } catch (ArithmeticException e) {
+                assertThrows(ArithmeticException.class, () -> cosecant.compute(x),
+                String.format("csc(%f) shouldn't be exist", x));
         }
-    }
 
     private static Stream<Arguments> provideAnglesWhereSineZero() {
         return Stream.of(
