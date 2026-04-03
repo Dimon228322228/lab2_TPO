@@ -39,7 +39,7 @@ public class App {
     public static void main(String[] args) {
         System.out.println("=== Генерация CSV файлов для всех модулей ===");
         System.out.println("Цель: создать файлы с данными для построения графиков.\n");
-        Range commonTrigonometricRange = new Range(-4 * PI, 4 * PI, 0.001);
+        Range commonTrigonometricRange = new Range(-4 * PI, 4 * PI, 0.00001);
         Range logsRange = new Range(0.01, 50.0, 0.05);
 
         // 1. Cosine (ядро)
