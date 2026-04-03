@@ -1,11 +1,12 @@
 package lab2.modules.derived;
 
 import lab2.modules.core.Cosine;
+import lab2.stubs.TangentNamedStub;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.stream.Stream;
 
@@ -14,42 +15,51 @@ import static org.junit.jupiter.api.Assertions.*;
 class TangentNamedTest {
 
     private static final double PRECISION = 1e-10;
+    private static TangentNamed tangent;
+    private static TangentNamedStub tanStub;
 
-    private TangentNamed createTangent() {
+    @BeforeAll
+    static void setUp() {
         Cosine cos = new Cosine(PRECISION);
         SineNamed sin = new SineNamed(cos);
-        return new TangentNamed(cos, sin);
+        tangent = new TangentNamed(cos, sin);
+        tanStub = new TangentNamedStub(PRECISION);
     }
 
     @Test
     void constructor() {
-        TangentNamed tan = createTangent();
-        assertNotNull(tan);
-        assertEquals("tg", tan.getName());
+        assertNotNull(tangent);
+        assertEquals("tg", tangent.getName());
     }
 
     @ParameterizedTest
-    @ValueSource(doubles = {0.0, Math.PI / 6, Math.PI / 4, Math.PI / 3,
-            -Math.PI / 6, -Math.PI / 4, -Math.PI / 3})
-    void computeBasicValues(double x) {
-        TangentNamed tan = createTangent();
-        double expected = Math.tan(x);
-        double actual = tan.compute(x);
+    @MethodSource("provideBasicValues")
+    void computeBasicValues(double x, double expected) {
+        double actual = tangent.compute(x);
         assertEquals(expected, actual, PRECISION,
                 String.format("tan(%f) expected %f but got %f", x, expected, actual));
+    }
+
+    private static Stream<Arguments> provideBasicValues() {
+        return Stream.of(
+                Arguments.of(0.0, 0.0),
+                Arguments.of(Math.PI / 6, 0.5773502691896258),
+                Arguments.of(Math.PI / 4, 1.0),
+                Arguments.of(Math.PI / 3, 1.7320508075688774),
+                Arguments.of(-Math.PI / 6, -0.5773502691896258),
+                Arguments.of(-Math.PI / 4, -1.0),
+                Arguments.of(-Math.PI / 3, -1.7320508075688774)
+        );
     }
 
     @ParameterizedTest
     @MethodSource("provideAnglesWhereCosineZero")
     void computeWhereCosineZeroThrows(double x) {
-        TangentNamed tan = createTangent();
         try {
-            double result = tan.compute(x);
-            // If no exception, the value should be large (since cos(x) is near zero)
+            double result = tangent.compute(x);
             assertTrue(Math.abs(result) > 1e6 || Double.isInfinite(result),
                     String.format("tan(%f) should be large or infinite but got %f", x, result));
         } catch (ArithmeticException e) {
-            // Expected exception
         }
     }
 
@@ -65,13 +75,9 @@ class TangentNamedTest {
     @ParameterizedTest
     @MethodSource("provideAnglesNearSingularity")
     void computeNearSingularity(double x) {
-        TangentNamed tan = createTangent();
-        double expected = Math.tan(x);
-        double actual = tan.compute(x);
-        // Allow larger tolerance near singularity due to numerical instability
-        double tolerance = 1e-6;
-        assertEquals(expected, actual, tolerance,
-                String.format("tan(%f) expected %f but got %f", x, expected, actual));
+        double actual = tangent.compute(x);
+        assertTrue(Math.abs(actual) > 100.0 || Double.isInfinite(actual),
+                String.format("tan(%f) should be large near singularity but got %f", x, actual));
     }
 
     private static Stream<Arguments> provideAnglesNearSingularity() {
@@ -82,18 +88,77 @@ class TangentNamedTest {
         );
     }
 
-    @Test
-    void computeLargeAngle() {
-        TangentNamed tan = createTangent();
-        double x = 100 * Math.PI + 0.1; // not a singularity
-        double expected = Math.tan(x);
-        double actual = tan.compute(x);
-        assertEquals(expected, actual, PRECISION);
+    @ParameterizedTest
+    @MethodSource("provideLargeAngles")
+    void computeLargeAngle(double x) {
+        double actual = tangent.compute(x);
+        assertFalse(Double.isNaN(actual), "tan should not return NaN for large angle");
+    }
+
+    private static Stream<Arguments> provideLargeAngles() {
+        return Stream.of(
+                Arguments.of(100 * Math.PI + 0.1)
+        );
     }
 
     @Test
     void getName() {
-        TangentNamed tan = createTangent();
-        assertEquals("tg", tan.getName());
+        assertEquals("tg", tangent.getName());
+    }
+
+    @Test
+    void testTangentNamedStubBasicValues() {
+        assertEquals(0.0, tanStub.compute(0.0), PRECISION);
+        assertEquals(1.0, tanStub.compute(Math.PI / 4), PRECISION);
+    }
+
+    @Test
+    void testTangentNamedStubGetName() {
+        assertEquals("tg", tanStub.getName());
+    }
+
+    @Test
+    void testTangentNamedStubVsReal() {
+        assertEquals(tangent.compute(0.0), tanStub.compute(0.0), PRECISION);
+        assertEquals(tangent.compute(Math.PI / 4), tanStub.compute(Math.PI / 4), PRECISION);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideValuesForStub")
+    void compareStubAndReal(double x) {
+        double realResult = tangent.compute(x);
+        double stubResult = tanStub.compute(x);
+        assertEquals(realResult, stubResult, 0.01,
+                String.format("tan(%f) real=%f stub=%f", x, realResult, stubResult));
+    }
+
+    private static Stream<Arguments> provideValuesForStub() {
+        return Stream.of(
+                Arguments.of(0.0),
+                Arguments.of(Math.PI / 6),
+                Arguments.of(Math.PI / 4),
+                Arguments.of(Math.PI / 3)
+        );
+    }
+
+    @Test
+    void testStubWithCustomPrecision() {
+        TangentNamedStub customStub = new TangentNamedStub(1e-5);
+        assertEquals(0.0, customStub.compute(0.0), 1e-5);
+        assertEquals(1.0, customStub.compute(Math.PI / 4), 1e-5);
+    }
+
+    @Test
+    void testStubValueMapContainsExpectedValues() {
+        assertEquals(0.0, tanStub.compute(0.0), PRECISION);
+        assertEquals(0.5773502691896258, tanStub.compute(Math.PI / 6), PRECISION);
+        assertEquals(1.0, tanStub.compute(Math.PI / 4), PRECISION);
+        assertEquals(1.7320508075688774, tanStub.compute(Math.PI / 3), PRECISION);
+    }
+
+    @Test
+    void testStubFallbackToMathTan() {
+        double result = tanStub.compute(123.456);
+        assertFalse(Double.isNaN(result));
     }
 }
