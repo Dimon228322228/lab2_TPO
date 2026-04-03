@@ -28,14 +28,7 @@ class SineNamed implements NamedOutputFunction {
   + getName(): String
 }
 
-class TangentNamed implements NamedOutputFunction {
-  - cos: Cosine
-  - sin: SineNamed
-  - name: String
-  + TangentNamed(cos: Cosine, sin: SineNamed)
-  + compute(x: double): double
-  + getName(): String
-}
+
 
 class CotangentNamed implements NamedOutputFunction {
   - cos: Cosine
@@ -134,8 +127,6 @@ CSVWriter ..|> Writer
 
 ' Композиции/агрегации (зависимости между модулями)
 SineNamed --> Cosine
-TangentNamed --> Cosine
-TangentNamed --> SineNamed
 CotangentNamed --> Cosine
 CotangentNamed --> SineNamed
 SecantNamed --> Cosine
